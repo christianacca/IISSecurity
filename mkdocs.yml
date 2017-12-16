@@ -1,0 +1,9 @@
+site_name: IISSecurity
+repo_url: https://github.com/christianacca/IISSecurity
+theme: readthedocs
+pages:
+  - Home: index.md
+  - IISSecurity Basics:
+    - What is IISSecurity: about.md
+    - Quick Start: Quick-Start-Installation-and-Example.md
+  - Acknowledgements: acknowledgements.md
