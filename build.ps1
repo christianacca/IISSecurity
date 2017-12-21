@@ -21,17 +21,18 @@ if (-not (Get-PackageProvider -Name Nuget -EA SilentlyContinue))
     Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
 }
 
-# Register custom PS Repo (currently required for forked vs of PSDepend)
-$customRepo = 'christianacca-ps'
-if (-not(Get-PSRepository -Name $customRepo -EA SilentlyContinue))
+$publishRepository = 'christianacca-ps'
+
+# Register custom PS Repo
+if (-not(Get-PSRepository -Name $publishRepository -EA SilentlyContinue))
 {
-    Write-Output "  Registering custom PS Repository '$customRepo'"    
+    Write-Output "  Registering custom PS Repository '$publishRepository'"    
     $repo = @{
-        Name                  = $customRepo
-        SourceLocation        = "https://www.myget.org/F/$customRepo/api/v2"
-        ScriptSourceLocation  = "https://www.myget.org/F/$customRepo/api/v2/"
-        PublishLocation       = "https://www.myget.org/F/$customRepo/api/v2/package"
-        ScriptPublishLocation = "https://www.myget.org/F/$customRepo/api/v2/package/"
+        Name                  = $publishRepository
+        SourceLocation        = "https://www.myget.org/F/$publishRepository/api/v2"
+        ScriptSourceLocation  = "https://www.myget.org/F/$publishRepository/api/v2/"
+        PublishLocation       = "https://www.myget.org/F/$publishRepository/api/v2/package"
+        ScriptPublishLocation = "https://www.myget.org/F/$publishRepository/api/v2/package/"
         InstallationPolicy    = 'Trusted'
     }
     Register-PSRepository @repo
@@ -40,11 +41,10 @@ if (-not(Get-PSRepository -Name $customRepo -EA SilentlyContinue))
 # Grab nuget bits, install modules, set build variables, start build.
 Write-Output "  Install And Import Dependent Modules"
 Write-Output "    Build Modules"
-$psDependVersion = '0.1.58.1'
+$psDependVersion = '0.1.62'
 if (-not(Get-InstalledModule PSDepend -RequiredVersion $psDependVersion -EA SilentlyContinue))
 {
-    # todo: remove -Repository parameter once module changes land on PSGallery
-    Install-Module PSDepend -RequiredVersion $psDependVersion -Repository $customRepo -Scope CurrentUser
+    Install-Module PSDepend -RequiredVersion $psDependVersion -Force -Scope CurrentUser
 }
 Import-Module PSDepend -RequiredVersion $psDependVersion
 Invoke-PSDepend -Path "$PSScriptRoot\build.depend.psd1" -Install -Import -Force
@@ -55,6 +55,7 @@ Invoke-PSDepend -Path "$PSScriptRoot\test.depend.psd1" -Install -Import -Force
 if (-not (Get-Item env:\BH*)) 
 {
     Set-BuildEnvironment
+    Set-Item env:\PublishRepository -Value $publishRepository
 }
 $global:SUTPath = $env:BHPSModuleManifest
 . "$PSScriptRoot\tests\Unload-SUT.ps1"
