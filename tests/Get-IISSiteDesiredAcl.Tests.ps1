@@ -148,6 +148,40 @@ Describe "Get-IISSiteDesiredAcl" {
         ($permissions | Measure-Object).Count | Should -Be 1
         Compare-ObjectProperties ($permissions | select Path, Permission) $expected | Should -Be $null
     }
+    
+    It "site only, multiple -ModifyPaths and -ExecutePaths, one of which is same" {
+        $params = @{
+            SitePath = 'C:\inetpub\wwwroot'
+            ModifyPaths = @('App_Data', 'logs')
+            ExecutePaths = @('App_Data', 'other')
+            SkipTempAspNetFiles = $true
+        }
+        $permissions = Get-CaccaIISSiteDesiredAcl @params
+
+        $expected = @(
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\'
+                Permission = '(OI)(CI)R'
+            },
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\App_Data'
+                Permission = '(OI)(CI)M'
+            },
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\other'
+                Permission = '(OI)(CI)(RX)'
+            },
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\logs'
+                Permission = '(OI)(CI)M'
+            }
+        )
+        ($permissions | Measure-Object).Count | Should -Be 4
+        $permissions[0] | select Path, Permission | Should -BeLike $expected[0]
+        $permissions[1] | select Path, Permission | Should -BeLike $expected[1]
+        $permissions[2] | select Path, Permission | Should -BeLike $expected[2]
+        $permissions[3] | select Path, Permission | Should -BeLike $expected[3]
+    }
 
     It "site and relative child app" {
         $permissions = Get-CaccaIISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -AppPath 'MyWebApp1' -SkipTempAspNetFiles

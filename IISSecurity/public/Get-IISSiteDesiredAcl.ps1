@@ -179,11 +179,11 @@ function Get-IISSiteDesiredAcl
                 }
                 Add $permissions (ToIcaclsPermission $appFullPath '(OI)(CI)R' 'read permission (inherit)')
             }
-            $ModifyPaths | ForEach-Object $getAppSubPath | ForEach-Object {
-                Add $permissions (ToIcaclsPermission $_ '(OI)(CI)M' 'modify permission (inherit)')
-            }
             $ExecutePaths | ForEach-Object $getAppSubPath | ForEach-Object {
                 Add $permissions (ToIcaclsPermission $_ '(OI)(CI)(RX)' 'read+execute permission (inherit)')
+            }
+            $ModifyPaths | ForEach-Object $getAppSubPath | ForEach-Object {
+                Add $permissions (ToIcaclsPermission $_ '(OI)(CI)M' 'modify permission (inherit)')
             }
             if (!$SkipTempAspNetFiles)
             {
