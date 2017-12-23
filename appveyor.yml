@@ -1,5 +1,11 @@
 # See http://www.appveyor.com/docs/appveyor-yml for many more options
 
+# Build worker image (VM template)
+image: Visual Studio 2015
+
+# clone directory
+clone_folder: C:\MyProjects\IISSecurity
+
 environment:
   NugetApiKey:
     secure: PeAYLY8L65JcfVzZvYZ9RdTIaRBmmgPaSAnAqcJ+FWVX73Wjubx3yhD09O8jIcPF
