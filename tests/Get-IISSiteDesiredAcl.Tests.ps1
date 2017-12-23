@@ -66,6 +66,23 @@ Describe "Get-IISSiteDesiredAcl" {
         Compare-ObjectProperties ($permissions[1] | select Path, Permission) $expected[1] | Should -Be $null
     }
     
+    It "site only, one -ExecutePaths" {
+        $permissions = Get-CaccaIISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -ExecutePaths 'App_Data' -SkipTempAspNetFiles
+        $expected = @(
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\'
+                Permission = '(OI)(CI)R'
+            },
+            [PsCustomObject] @{
+                Path       = 'C:\inetpub\wwwroot\App_Data'
+                Permission = '(OI)(CI)(RX)'
+            }
+        )
+        ($permissions | Measure-Object).Count | Should -Be 2
+        Compare-ObjectProperties ($permissions[0] | select Path, Permission) $expected[0] | Should -Be $null
+        Compare-ObjectProperties ($permissions[1] | select Path, Permission) $expected[1] | Should -Be $null
+    }
+    
     It "site only, multiple -ModifyPaths" {
         $permissions = Get-CaccaIISSiteDesiredAcl -SitePath 'C:\inetpub\wwwroot' -ModifyPaths 'App_Data', 'logs' -SkipTempAspNetFiles
 

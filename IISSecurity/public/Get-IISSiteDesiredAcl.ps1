@@ -183,7 +183,7 @@ function Get-IISSiteDesiredAcl
                 Add $permissions (ToIcaclsPermission $_ '(OI)(CI)M' 'modify permission (inherit)')
             }
             $ExecutePaths | ForEach-Object $getAppSubPath | ForEach-Object {
-                Add $permissions (ToIcaclsPermission $_ '(RX)' 'read+execute permission')
+                Add $permissions (ToIcaclsPermission $_ '(OI)(CI)(RX)' 'read+execute permission (inherit)')
             }
             if (!$SkipTempAspNetFiles)
             {
