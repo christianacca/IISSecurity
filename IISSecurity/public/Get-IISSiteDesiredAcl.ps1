@@ -89,7 +89,7 @@ function Get-IISSiteDesiredAcl
             if ($Results.Contains($key))
             {
                 $original = $Results[$key]
-                Write-Warning "Path '$($Permission.Path)' being assigned permissive rights; was: '$($original.Description)'; now: '$($Permission.Description)'"
+                Write-Warning "Path '$($Permission.Path)' is the target of multiple permission assignments; was: '$($original.Description)'; now: '$($Permission.Description)'"
             }
             $Results[$key] = $Permission
         }
