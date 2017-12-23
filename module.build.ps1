@@ -147,15 +147,17 @@ Task BuildPSD1 -inputs (Get-ChildItem $Source -Recurse -File) -Outputs $Manifest
     }
 
     $galleryVersion = Import-Clixml -Path "$output\version.xml"
+
     if ( $version -lt $galleryVersion )
     {
         $version = $galleryVersion
     }
-    Write-Output "  Stepping [$bumpVersionType] version [$version]"
-    $version = [version] (Step-Version $version -Type $bumpVersionType)
-    Write-Output "  Using version: $version"
-     
-    Update-Metadata -Path $ManifestPath -PropertyName ModuleVersion -Value $version
+    if ($version -eq $galleryVersion) {
+        Write-Output "  Stepping [$bumpVersionType] version [$version]"
+        $version = [version] (Step-Version $version -Type $bumpVersionType)
+        Write-Output "  Using version: $version"
+        Update-Metadata -Path $ManifestPath -PropertyName ModuleVersion -Value $version
+    }
 } 
 
 Task Publish {
