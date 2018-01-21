@@ -1,4 +1,4 @@
-$script:ModuleName = 'IISSecurity'
+$script:ModuleName = $ENV:BHProjectName
 
 $script:Source = Join-Path $BuildRoot $ModuleName
 $script:Output = Join-Path $BuildRoot output
@@ -12,6 +12,34 @@ $global:SUTPath = $script:ManifestPath
 Task Default Build, Pester, Publish
 Task Build CopyToOutput, BuildPSM1, BuildPSD1
 Task Pester Build, UnitTests, FullTests
+
+function PublishTestResults
+{
+    param(
+        [string]$Path
+    )
+    if ($ENV:BHBuildSystem -eq 'Unknown')
+    {
+        return
+    }
+    Write-Output "Publishing test result file"
+    switch ($ENV:BHBuildSystem)
+    {
+        'AppVeyor'
+        { 
+            (New-Object 'System.Net.WebClient').UploadFile(
+                "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
+                $Path )
+        }
+        'VSTS'
+        {
+            # Skip; publish logic defined as task in vsts build config (see .vsts-ci.yml)
+        }
+        Default {
+            Write-Warning "Publish test result not implemented for build system '$($ENV:BHBuildSystem)'"
+        }
+    }
+}
 
 Task Clean {
     $null = Remove-Item $Output -Recurse -ErrorAction Ignore
@@ -28,6 +56,9 @@ Task UnitTests {
 
 Task FullTests {
     $TestResults = Invoke-Pester -Path Tests -PassThru -OutputFormat NUnitXml -OutputFile $testFile -Tag Build
+
+    PublishTestResults $testFile
+    
     if ($TestResults.FailedCount -gt 0)
     {
         Write-Error "Failed [$($TestResults.FailedCount)] Pester tests"
@@ -95,6 +126,8 @@ Task BuildPSD1 -inputs (Get-ChildItem $Source -Recurse -File) -Outputs $Manifest
  
     $functions = Get-ChildItem "$ModuleName\Public\*.ps1" | Where-Object { $_.name -notmatch 'Tests'} | Select-Object -ExpandProperty basename      
     Set-ModuleFunctions -Name $ManifestPath -FunctionsToExport $functions
+
+    Set-ModuleAliases -Name $ManifestPath
  
     Write-Output "  Detecting semantic versioning"
  
@@ -157,6 +190,10 @@ Task BuildPSD1 -inputs (Get-ChildItem $Source -Recurse -File) -Outputs $Manifest
         $version = [version] (Step-Version $version -Type $bumpVersionType)
         Write-Output "  Using version: $version"
         Update-Metadata -Path $ManifestPath -PropertyName ModuleVersion -Value $version
+    }
+    else 
+    {
+        Write-Output "  Using version from $ModuleName.psd1: $version"
     }
 } 
 
