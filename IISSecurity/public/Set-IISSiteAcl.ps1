@@ -59,7 +59,6 @@ function Set-IISSiteAcl
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
-        [ValidateNotNullOrEmpty()]
         [string] $AppPoolIdentity,
 
         [Parameter(ValueFromPipeline)]

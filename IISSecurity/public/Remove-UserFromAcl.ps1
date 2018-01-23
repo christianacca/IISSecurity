@@ -28,7 +28,6 @@ function Remove-UserFromAcl
         $IdentityReference,
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ValueFromPipeline)]
-        [ValidateNotNullOrEmpty()]
         [string] $Path
     )
     

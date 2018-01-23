@@ -28,7 +28,6 @@ function Set-WebHardenedAcl
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
-        [ValidateNotNullOrEmpty()]
         [ValidateScript( {CheckPathExists $_})]
         [string] $Path,
         
