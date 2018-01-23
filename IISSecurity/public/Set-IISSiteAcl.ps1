@@ -35,7 +35,7 @@ function Set-IISSiteAcl
     Grant permissions used for 'SitePath' to only that folder and it's files but NOT subfolders
 
     .EXAMPLE
-    Set-CaccaIISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolName 'MyWebApp1-AppPool'
+    Set-CaccaIISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolIdentity 'MyWebApp1-AppPool'
 
     Description
     -----------
