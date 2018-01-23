@@ -1,20 +1,18 @@
+. "$PSScriptRoot\CheckHasAccess.ps1"
+
+$script:userNames = @()
+function CreateUser {
+    param([string] $Name)
+
+    $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
+    $script:userNames += $Name
+    New-LocalUser $Name -Password $pswd | Out-Null
+    $Name
+}
+
 Describe 'Set-IISSiteAcl' -Tag Build {
 
     $ErrorActionPreference = 'Stop'
-
-    function CheckHasAccess
-    {
-        param(
-            [Parameter(ValueFromPipeline)]
-            [string] $Path,
-            [string] $Username
-        )
-
-        $domainQualifiedUsername = "$($env:COMPUTERNAME)\$Username"
-
-        $identities = (Get-Acl $Path).Access.IdentityReference
-        $identities | ? { $_.Value -eq $domainQualifiedUsername } | Should -Not -BeNullOrEmpty
-    }
 
     BeforeAll {
         Unload-SUT
@@ -22,82 +20,72 @@ Describe 'Set-IISSiteAcl' -Tag Build {
 
         # given...
 
-        $script:sitePath = Join-Path $TestDrive 'site1'
-        New-Item $script:sitePath -ItemType Directory
-        $script:sitePathSpaces = Join-Path $TestDrive 'this site 1'
-        New-Item $script:sitePathSpaces -ItemType Directory
-
-        $script:testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
-        $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
-        New-LocalUser $script:testLocalUser -Password $pswd
-
-        $script:testLocalUserSpaces = "Pester User $(Get-Random -Maximum 10000)"
-        New-LocalUser $script:testLocalUserSpaces -Password $pswd
+        $sitePath = Join-Path $TestDrive 'site1'
+        New-Item $sitePath -ItemType Directory
+        $sitePathSpaces = Join-Path $TestDrive 'this site 1'
+        New-Item $sitePathSpaces -ItemType Directory
         
-        $script:testLocalUserSid = "PesterTestUser-$(Get-Random -Maximum 10000)"
-        New-LocalUser $script:testLocalUserSid -Password $pswd
-
-        $script:testLocalUserApostrophe = "Pester'User $(Get-Random -Maximum 10000)"
-        New-LocalUser $script:testLocalUserApostrophe -Password $pswd
+        $testLocalUser = CreateUser "PesterTestUser-$(Get-Random -Maximum 10000)"
+        $testLocalUserSpaces = CreateUser "Pester User $(Get-Random -Maximum 10000)"
+        $testLocalUserSid = CreateUser "PesterTestUser-$(Get-Random -Maximum 10000)"
+        $testLocalUserApostrophe = CreateUser "Pester'User $(Get-Random -Maximum 10000)"
     }
 
     AfterAll {
         Unload-SUT
-        @(
-            $script:testLocalUser, 
-            $script:testLocalUserSpaces, 
-            $script:testLocalUserApostrophe, 
-            $script:testLocalUserSid) | Remove-LocalUser
+        $script:userNames | Remove-LocalUser
     }
 
-    It "site only" {
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUser
-
-        # then
-        $script:sitePath | CheckHasAccess -Username $script:testLocalUser
-    }
-
-    It "-SitePath with spaces" {
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePathSpaces -AppPoolIdentity $script:testLocalUser
-
-        # then
-        $script:sitePathSpaces | CheckHasAccess -Username $script:testLocalUser
-    }
+    Context '.' {
+        It "site only" {
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePath -AppPoolIdentity $testLocalUser
     
-    It "-AppPoolIdentity with spaces" {
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUserSpaces
-
-        # then
-        $script:sitePath | CheckHasAccess -Username $script:testLocalUserSpaces
-    }
+            # then
+            $sitePath | CheckHasAccess -Username $testLocalUser
+        }
     
-    It "-AppPoolIdentity with spaces and apostrophe" {
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUserApostrophe
-
-        # then
-        $script:sitePath | CheckHasAccess -Username $script:testLocalUserApostrophe
-    }
+        It "-SitePath with spaces" {
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePathSpaces -AppPoolIdentity $testLocalUser
     
-    It "-AppPoolIdentity as SID" {
-        # given
-        $sid = (Get-LocalUser $script:testLocalUserSid).SID.Value
-
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity "$sid"
-
-        # then
-        $script:sitePath | CheckHasAccess -Username $script:testLocalUserSid
-    }
+            # then
+            $sitePathSpaces | CheckHasAccess -Username $testLocalUser
+        }
+        
+        It "-AppPoolIdentity with spaces" {
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePath -AppPoolIdentity $testLocalUserSpaces
     
-    It "-AppPoolIdentity with spaces, -SitePath with spaces" {
-        # when
-        Set-CaccaIISSiteAcl -SitePath $script:sitePathSpaces -AppPoolIdentity $script:testLocalUserSpaces
-
-        # then
-        $script:sitePathSpaces | CheckHasAccess -Username $script:testLocalUserSpaces
+            # then
+            $sitePath | CheckHasAccess -Username $testLocalUserSpaces
+        }
+        
+        It "-AppPoolIdentity with spaces and apostrophe" {
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePath -AppPoolIdentity $testLocalUserApostrophe
+    
+            # then
+            $sitePath | CheckHasAccess -Username $testLocalUserApostrophe
+        }
+        
+        It "-AppPoolIdentity as SID" {
+            # given
+            $sid = (Get-LocalUser $testLocalUserSid).SID.Value
+    
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePath -AppPoolIdentity "$sid"
+    
+            # then
+            $sitePath | CheckHasAccess -Username $testLocalUserSid
+        }
+        
+        It "-AppPoolIdentity with spaces, -SitePath with spaces" {
+            # when
+            Set-CaccaIISSiteAcl -SitePath $sitePathSpaces -AppPoolIdentity $testLocalUserSpaces
+    
+            # then
+            $sitePathSpaces | CheckHasAccess -Username $testLocalUserSpaces
+        }
     }
 }

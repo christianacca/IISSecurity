@@ -27,5 +27,6 @@
     ExcludeRules = @('PSAvoidUsingCmdletAliases', 
         'PSAvoidGlobalVars', 
         'PSAvoidUsingConvertToSecureStringWithPlainText', 
-        'PSShouldProcess')
+        'PSShouldProcess',
+        'PSUseDeclaredVarsMoreThanAssignments')
 }
