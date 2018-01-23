@@ -106,7 +106,13 @@ function Set-IISSiteAcl
             $permissions | ForEach-Object {
                 if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$AppPoolIdentity' $($_.Description)"))
                 {
-                    icacls ("$($_.Path)") /grant:r ("$AppPoolIdentity" + ':' + "$($_.Permission)") | Out-Null
+                    $sanitisedPath = $_.Path.TrimEnd('\')
+                    $params = @(
+                        "`"$sanitisedPath`""
+                        '/grant:r'
+                        "`"$AppPoolIdentity`":$($_.Permission)"
+                    )
+                    Start-Executable icacls $params | Out-Null
                 }
             }
         }

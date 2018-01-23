@@ -1,5 +1,7 @@
 Describe 'Set-IISSiteAcl' -Tag Build {
 
+    $ErrorActionPreference = 'Stop'
+
     function CheckHasAccess
     {
         param(
@@ -22,6 +24,8 @@ Describe 'Set-IISSiteAcl' -Tag Build {
 
         $script:sitePath = Join-Path $TestDrive 'site1'
         New-Item $script:sitePath -ItemType Directory
+        $script:sitePathSpaces = Join-Path $TestDrive 'this site 1'
+        New-Item $script:sitePathSpaces -ItemType Directory
 
         $script:testLocalUser = "PesterTestUser-$(Get-Random -Maximum 10000)"
         $pswd = ConvertTo-SecureString '(pe$ter4powershell)' -AsPlainText -Force
@@ -41,7 +45,15 @@ Describe 'Set-IISSiteAcl' -Tag Build {
         Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUser
 
         # then
-        $sitePath | CheckHasAccess -Username $script:testLocalUser
+        $script:sitePath | CheckHasAccess -Username $script:testLocalUser
+    }
+
+    It "-SitePath with spaces" {
+        # when
+        Set-CaccaIISSiteAcl -SitePath $script:sitePathSpaces -AppPoolIdentity $script:testLocalUser
+
+        # then
+        $script:sitePathSpaces | CheckHasAccess -Username $script:testLocalUser
     }
     
     It "-AppPoolIdentity with spaces" {
@@ -49,6 +61,14 @@ Describe 'Set-IISSiteAcl' -Tag Build {
         Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUserSpaces
 
         # then
-        $sitePath | CheckHasAccess -Username $script:testLocalUserSpaces
+        $script:sitePath | CheckHasAccess -Username $script:testLocalUserSpaces
+    }
+    
+    It "-AppPoolIdentity with spaces, -SitePath with spaces" {
+        # when
+        Set-CaccaIISSiteAcl -SitePath $script:sitePathSpaces -AppPoolIdentity $script:testLocalUserSpaces
+
+        # then
+        $script:sitePathSpaces | CheckHasAccess -Username $script:testLocalUserSpaces
     }
 }
