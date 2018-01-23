@@ -35,7 +35,8 @@ function PublishTestResults
         {
             # Skip; publish logic defined as task in vsts build config (see .vsts-ci.yml)
         }
-        Default {
+        Default
+        {
             Write-Warning "Publish test result not implemented for build system '$($ENV:BHBuildSystem)'"
         }
     }
@@ -113,9 +114,23 @@ Task BuildPSM1 -Inputs (Get-Item "$source\*\*.ps1") -Outputs $ModulePath {
     Set-Content -Path  $ModulePath -Value $stringbuilder.ToString() 
 }
 
-Task NextPSGalleryVersion -if (-Not ( Test-Path "$output\version.xml" ) ) -Before BuildPSD1 {
-    $galleryVersion = Get-NextPSGalleryVersion -Name $ModuleName -Repository ($env:PublishRepository)
-    $galleryVersion | Export-Clixml -Path "$output\version.xml"
+Task PublishedModuleVersion -if (-Not ( Test-Path "$output\version.xml" ) ) -Before BuildPSD1 {
+    $version = try
+    {
+        [version](Find-Module -Name $ModuleName -Repository ($env:PublishRepository) -ErrorAction Stop).Version
+    }
+    catch
+    {
+        if ($_ -match "No match was found for the specified search criteria")
+        {
+            [System.Version]::new(0, 0, 1)
+        }
+        else
+        {
+            Write-Error $_
+        }
+    }
+    $version | Export-Clixml -Path "$output\version.xml"
 }
 
 Task BuildPSD1 -inputs (Get-ChildItem $Source -Recurse -File) -Outputs $ManifestPath {
@@ -179,13 +194,14 @@ Task BuildPSD1 -inputs (Get-ChildItem $Source -Recurse -File) -Outputs $Manifest
         }       
     }
 
-    $galleryVersion = Import-Clixml -Path "$output\version.xml"
+    $publishedVersion = Import-Clixml -Path "$output\version.xml"
 
-    if ( $version -lt $galleryVersion )
+    if ( $version -lt $publishedVersion )
     {
-        $version = $galleryVersion
+        $version = $publishedVersion
     }
-    if ($version -eq $galleryVersion) {
+    if ($version -eq $publishedVersion)
+    {
         Write-Output "  Stepping [$bumpVersionType] version [$version]"
         $version = [version] (Step-Version $version -Type $bumpVersionType)
         Write-Output "  Using version: $version"
