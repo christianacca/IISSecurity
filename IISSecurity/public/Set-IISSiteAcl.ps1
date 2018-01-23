@@ -103,6 +103,12 @@ function Set-IISSiteAcl
 
             ValidateAclPaths $permissions 'Cannot grant permissions; missing paths detected'
 
+            $identity = if (Test-SID $AppPoolIdentity) {
+                "*$AppPoolIdentity"
+            } else {
+                "`"$AppPoolIdentity`""
+            }
+
             $permissions | ForEach-Object {
                 if ($PSCmdlet.ShouldProcess($_.Path, "Granting '$AppPoolIdentity' $($_.Description)"))
                 {
@@ -110,7 +116,7 @@ function Set-IISSiteAcl
                     $params = @(
                         "`"$sanitisedPath`""
                         '/grant:r'
-                        "`"$AppPoolIdentity`":$($_.Permission)"
+                        "$identity`:$($_.Permission)"
                     )
                     Start-Executable icacls $params | Out-Null
                 }
