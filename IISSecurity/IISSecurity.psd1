@@ -12,7 +12,7 @@
 RootModule = 'IISSecurity.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.2.0'
+ModuleVersion = '1.0.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -27,7 +27,7 @@ Author = 'christianacca'
 CompanyName = ''
 
 # Copyright statement for this module
-Copyright = '(c) 2017 christianacca. All rights reserved.'
+Copyright = '(c) 2018 christianacca. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Cmdlets for securing IIS'
@@ -98,7 +98,7 @@ PrivateData = @{
         Tags = @('IIS', 'ACL', 'Security')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/christianacca/IISSecurity/blob/master/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/christianacca/IISSecurity'
@@ -110,7 +110,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # External dependent modules of this module
-        ExternalModuleDependencies = @('PreferenceVariables')
+        # ExternalModuleDependencies = @()
 
     } # End of PSData hashtable
 
