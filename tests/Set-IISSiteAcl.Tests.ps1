@@ -33,11 +33,14 @@ Describe 'Set-IISSiteAcl' -Tag Build {
 
         $script:testLocalUserSpaces = "Pester User $(Get-Random -Maximum 10000)"
         New-LocalUser $script:testLocalUserSpaces -Password $pswd
+
+        $script:testLocalUserApostrophe = "Pester'User $(Get-Random -Maximum 10000)"
+        New-LocalUser $script:testLocalUserApostrophe -Password $pswd
     }
 
     AfterAll {
         Unload-SUT
-        Get-LocalUser $script:testLocalUser, $script:testLocalUserSpaces | Remove-LocalUser
+        Get-LocalUser $script:testLocalUser, $script:testLocalUserSpaces, $script:testLocalUserApostrophe | Remove-LocalUser
     }
 
     It "site only" {
@@ -62,6 +65,14 @@ Describe 'Set-IISSiteAcl' -Tag Build {
 
         # then
         $script:sitePath | CheckHasAccess -Username $script:testLocalUserSpaces
+    }
+    
+    It "-AppPoolIdentity with spaces and apostrophe" {
+        # when
+        Set-CaccaIISSiteAcl -SitePath $script:sitePath -AppPoolIdentity $script:testLocalUserApostrophe
+
+        # then
+        $script:sitePath | CheckHasAccess -Username $script:testLocalUserApostrophe
     }
     
     It "-AppPoolIdentity with spaces, -SitePath with spaces" {
