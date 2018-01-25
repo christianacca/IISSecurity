@@ -116,6 +116,7 @@ Set-CaccaIISSiteAcl:AppPath
 Set-CaccaIISSiteAcl:ModifyPaths
 Set-CaccaIISSiteAcl:ExecutePaths
 Set-CaccaIISSiteAcl:SiteShellOnly
+Set-CaccaIISSiteAcl:MaxRetries
 Set-CaccaIISSiteAcl:Verbose
 Set-CaccaIISSiteAcl:vb
 Set-CaccaIISSiteAcl:Debug

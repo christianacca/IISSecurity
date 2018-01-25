@@ -33,6 +33,9 @@ function Set-IISSiteAcl
 
     .PARAMETER SiteShellOnly
     Grant permissions used for 'SitePath' to only that folder and it's files but NOT subfolders
+    
+    .PARAMETER MaxRetries
+    Number of retry attempts when assigning permissions
 
     .EXAMPLE
     Set-CaccaIISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolIdentity 'MyWebApp1-AppPool'
@@ -76,7 +79,10 @@ function Set-IISSiteAcl
         [ValidateNotNull()]
         [string[]] $ExecutePaths = @(),
 
-        [switch] $SiteShellOnly
+        [switch] $SiteShellOnly,
+
+        [ValidateRange(0, 10)]
+        [int]$MaxRetries = 3
     )
     begin
     {
@@ -117,7 +123,7 @@ function Set-IISSiteAcl
                         '/grant:r'
                         "$identity`:$($_.Permission)"
                     )
-                    Start-Executable icacls $params | Out-Null
+                    Invoke-WithRetry { Start-Executable icacls $params } $MaxRetries | Out-Null
                 }
             }
         }
