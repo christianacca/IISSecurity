@@ -47,6 +47,7 @@ function Set-WebHardenedAcl
     {
         try
         {
+            Write-Information "Web hardening filesystem permissions for '$Path'"
 
             # make sure the right people can administer the web server (before we start removing permissions below)
             if (![string]::IsNullOrWhiteSpace($SiteAdminsGroup))
