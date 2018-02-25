@@ -88,4 +88,84 @@ Describe 'Set-IISSiteAcl' -Tag Build {
             $sitePathSpaces | CheckHasAccess -Username $testLocalUserSpaces
         }
     }
+
+    Context '-CreateMissingPath' {
+
+        It "-SitePath" {
+            # when
+            $siteFolder = (New-Guid).ToString().Substring(0, 5)
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            Set-CaccaIISSiteAcl -SitePath $newSitePath -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $newSitePath | CheckHasAccess -Username $testLocalUser
+        }
+    
+        It "-SitePath with spaces" {
+            # when
+            $siteFolder = '{0} {1}' -f (New-Guid).ToString().Substring(0, 5), 'more'
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            Set-CaccaIISSiteAcl -SitePath $newSitePath -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $newSitePath | CheckHasAccess -Username $testLocalUser
+        }
+        
+        It "-AppPath" {
+            # when
+            $siteFolder = (New-Guid).ToString().Substring(0, 5)
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            Set-CaccaIISSiteAcl -SitePath $newSitePath -AppPath $newSitePath -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $newSitePath | CheckHasAccess -Username $testLocalUser
+        }
+        
+        It "-ModifyPaths (one)" {
+            # when
+            $siteFolder = (New-Guid).ToString().Substring(0, 5)
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            Set-CaccaIISSiteAcl -SitePath $newSitePath -ModifyPaths 'App_Data' -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $appDataPath = Join-Path $newSitePath 'App_Data'
+            $appDataPath | CheckHasAccess -Username $testLocalUser
+        }
+
+        It "-ModifyPaths (multiple with duplicates)" {
+            # when
+            $siteFolder = (New-Guid).ToString().Substring(0, 5)
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            $paths = @{
+                SitePath = $newSitePath
+                AppPath = 'ChildApp'
+                ModifyPaths = @('App_Data', 'App_Data\logs', 'App_Data')
+            }
+            Set-CaccaIISSiteAcl @paths -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $appDataPath = Join-Path $newSitePath 'ChildApp\App_Data'
+            $appDataPath | CheckHasAccess -Username $testLocalUser
+            $logsPath = Join-Path $newSitePath 'ChildApp\App_Data\logs'
+            $logsPath | CheckHasAccess -Username $testLocalUser
+        }
+        
+        It "-ExecutePaths (multiple with duplicates)" {
+            # when
+            $siteFolder = (New-Guid).ToString().Substring(0, 5)
+            $newSitePath = Join-Path $TestDrive $siteFolder
+            $paths = @{
+                SitePath = $newSitePath
+                AppPath = 'ChildApp'
+                ExecutePaths = @('App_Data', 'App_Data\logs', 'App_Data')
+            }
+            Set-CaccaIISSiteAcl @paths -AppPoolIdentity $testLocalUser -CreateMissingPath
+    
+            # then
+            $appDataPath = Join-Path $newSitePath 'ChildApp\App_Data'
+            $appDataPath | CheckHasAccess -Username $testLocalUser
+            $logsPath = Join-Path $newSitePath 'ChildApp\App_Data\logs'
+            $logsPath | CheckHasAccess -Username $testLocalUser
+        }
+    }
 }

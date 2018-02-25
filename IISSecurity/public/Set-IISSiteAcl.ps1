@@ -36,6 +36,9 @@ function Set-IISSiteAcl
     
     .PARAMETER MaxRetries
     Number of retry attempts when assigning permissions
+    
+    .PARAMETER CreateMissingPath
+    Create any missing paths?
 
     .EXAMPLE
     Set-CaccaIISSiteAcl -SitePath 'C:\inetpub\wwwroot' -AppPoolIdentity 'MyWebApp1-AppPool'
@@ -65,7 +68,6 @@ function Set-IISSiteAcl
         [string] $AppPoolIdentity,
 
         [Parameter(ValueFromPipeline)]
-        [ValidateScript( {CheckPathExists $_})]
         [string] $SitePath,
     
         [Parameter(ValueFromPipeline)]
@@ -82,7 +84,9 @@ function Set-IISSiteAcl
         [switch] $SiteShellOnly,
 
         [ValidateRange(0, 10)]
-        [int]$MaxRetries = 3
+        [int]$MaxRetries = 3,
+
+        [switch] $CreateMissingPath
     )
     begin
     {
@@ -105,6 +109,10 @@ function Set-IISSiteAcl
                 SiteShellOnly = $SiteShellOnly
             }
             $permissions = Get-IISSiteDesiredAcl @paths
+
+            if ($CreateMissingPath) {
+                $permissions | Where-Object { -not(Test-Path $_.Path) } | New-Item -ItemType Directory
+            }
 
             ValidateAclPaths $permissions 'Cannot grant permissions; missing paths detected'
 
